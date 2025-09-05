@@ -1,0 +1,47 @@
+services:
+  db:
+    image: postgres:17.6
+    restart: always
+    ports:
+      - 15431:5432
+    #logging:
+    #  driver: none
+    volumes:
+      - ./db_backup:/db_backup
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres-init.dev.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: example
+
+  app:
+    image: app:local
+    build:
+      context: .
+      dockerfile: ./Dockerfiledev
+    depends_on:
+      - db
+      # - localstack
+    #logging:
+    #  driver: none
+    env_file:
+      - ./.env
+    entrypoint: ./docker_scripts/dev_start_nest.sh
+    volumes:
+      - ./src:/code/src
+      - ./drizzle:/code/drizzle
+      - ./db-url.ts:/code/db-url.ts
+      - ./test:/code/test
+      - ./docker_scripts:/code/docker_scripts
+      - ./.env:/code/.env
+      - ./deploy:/code/deploy
+      - ./drizzle.config.ts:/code/drizzle.config.ts
+      - ./tenant.config.ts:/code/tenant.config.ts
+      - ./package.json:/code/package.json
+      
+    restart: always
+    ports:
+      - 13000:3000
+
+volumes:
+  pgdata:

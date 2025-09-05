@@ -1,0 +1,22 @@
+FROM node:24-alpine AS initial
+LABEL maintainer="Evan Kesten (ebk46@cornell.edu)"
+
+WORKDIR /code
+
+RUN addgroup service-group \
+  && adduser -S service-account -G service-group
+
+COPY yarn.lock ./yarn.lock
+COPY package.json ./package.json
+COPY src ./src
+COPY tsconfig.json ./tsconfig.json
+COPY drizzle.config.ts ./drizzle.config.ts
+COPY tenant.config.ts ./tenant.config.ts
+COPY .env ./.env
+
+RUN yarn install --with dev \
+    && chown -R service-account:service-group /code
+
+USER service-account
+
+EXPOSE 3000
